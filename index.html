@@ -3,40 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A4 Portrait Card Collage Generator (54mm × 85mm)</title>
+    <title>Ace Photo Collage</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Include html2canvas for high-resolution image downloading of the A4 sheet -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         @media print {
-            body * {
-                visibility: hidden;
-            }
-
+            body * { visibility: hidden; }
             #sheets-container,
             #sheets-container .a4-sheet,
-            #sheets-container .a4-sheet * {
-                visibility: visible;
-            }
-
+            #sheets-container .a4-sheet * { visibility: visible; }
             #sheets-container {
                 display: block !important;
                 width: 210mm !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                gap: 0 !important;
             }
-
-            .sheet-preview {
+            .sheet-preview { display: contents !important; }
+            main {
                 display: block !important;
                 width: 210mm !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                overflow: visible !important;
             }
-
-            .sheet-title {
-                display: none !important;
+            header,
+            body > header,
+            body > div:not(#sheets-container) { display: none !important; }
+            body {
+                display: block !important;
+                width: 210mm !important;
+                min-height: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
             }
-
+            .sheet-title { display: none !important; }
             .a4-sheet {
                 position: relative !important;
                 width: 210mm !important;
@@ -47,22 +49,17 @@
                 border: none !important;
                 border-radius: 0 !important;
                 background: white !important;
-                break-after: page;
-                page-break-after: always;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+                break-after: page !important;
+                page-break-after: always !important;
             }
-
             .a4-sheet:last-child {
-                break-after: auto;
-                page-break-after: auto;
+                break-after: auto !important;
+                page-break-after: auto !important;
             }
-
-            @page {
-                size: A4 portrait;
-                margin: 0;
-            }
+            @page { size: A4 portrait; margin: 0; }
         }
-
-        /* Precise portrait card dimensions: 54mm width × 85mm height */
         .card-slot {
             width: 54mm;
             height: 85mm;
@@ -70,28 +67,16 @@
             page-break-inside: avoid;
             flex-shrink: 0;
         }
-
-        /* Custom scrollbar for preview workspace */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 4px;
-        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-[#eef1e6] text-slate-800 font-sans min-h-screen flex flex-col items-center p-4 md:p-8">
-
     <header class="w-full max-w-6xl mb-6 text-center">
-        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">A4 Portrait Card Collage Generator</h1>
-        <p class="text-slate-600 text-sm md:text-base mt-2">Precise <span class="text-emerald-700 font-bold">54mm width × 85mm height</span> portrait layout with equal spacing, optimized for A4 print.</p>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">Ace Photo Collage</h1>
+        <p class="text-slate-600 text-sm md:text-base mt-2">Create precise <span class="text-emerald-700 font-bold">54mm × 85mm</span> portrait photo layouts, optimized for A4 print.</p>
     </header>
-
     <div class="w-full max-w-6xl bg-white/90 backdrop-blur border border-slate-200 p-4 md:p-6 rounded-2xl shadow-sm flex flex-wrap gap-4 items-center justify-between mb-8">
         <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             <label class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl cursor-pointer font-medium transition shadow-sm flex items-center gap-2 text-sm md:text-base">
@@ -101,7 +86,6 @@
             </label>
             <button id="clear-btn" class="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2.5 rounded-xl font-medium transition text-sm md:text-base border border-slate-300 shadow-sm">Clear Sheet</button>
         </div>
-        
         <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
             <span class="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200" id="image-counter">0 cards</span>
             <button id="download-btn" class="bg-slate-800 hover:bg-slate-900 text-white px-5 py-2.5 rounded-xl font-semibold transition shadow-sm flex items-center gap-2 text-sm md:text-base">
@@ -109,35 +93,28 @@
                 Download PNGs
             </button>
             <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold transition shadow-sm flex items-center gap-2 text-sm md:text-base">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4h2m2 4h6a2 2 0 002-2v-4H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                 Print / PDF
             </button>
         </div>
     </div>
-
     <main class="w-full flex justify-center overflow-auto pb-16 px-2">
-        <!-- Every 9 uploaded photos are placed on a new A4 sheet. -->
         <div id="sheets-container" class="flex flex-col items-center gap-8 w-full"></div>
     </main>
-
     <script>
         const imageUpload = document.getElementById('image-upload');
         const sheetsContainer = document.getElementById('sheets-container');
         const clearBtn = document.getElementById('clear-btn');
         const imageCounter = document.getElementById('image-counter');
         const downloadBtn = document.getElementById('download-btn');
-
         const CARDS_PER_SHEET = 9;
         let uploadedImages = [];
-
         function createSheet(sheetImages, sheetNumber) {
             const preview = document.createElement('div');
             preview.className = 'sheet-preview flex flex-col items-center w-full';
-
             const title = document.createElement('div');
             title.className = 'sheet-title text-sm font-semibold text-slate-500 mb-2';
             title.textContent = `A4 Sheet ${sheetNumber} • ${sheetImages.length}/9 cards`;
-
             const sheet = document.createElement('div');
             sheet.className = 'a4-sheet bg-white shadow-[0_0_40px_rgba(0,0,0,0.1)] relative grid rounded-sm';
             sheet.style.cssText = `
@@ -151,21 +128,16 @@
                 align-content: center;
                 margin: 0 auto;
             `;
-
             sheetImages.forEach((src, localIndex) => {
                 const globalIndex = (sheetNumber - 1) * CARDS_PER_SHEET + localIndex;
-
                 const slot = document.createElement('div');
                 slot.className = 'card-slot relative overflow-hidden bg-white group flex items-center justify-center';
-
                 const img = document.createElement('img');
                 img.src = src;
                 img.className = 'w-full h-full object-cover';
                 img.alt = `Portrait card ${globalIndex + 1}`;
-
                 const overlay = document.createElement('div');
                 overlay.className = 'absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-start justify-end p-1.5 print:hidden';
-
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'bg-red-600 hover:bg-red-500 text-white rounded-full p-1.5 transition shadow cursor-pointer';
                 removeBtn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
@@ -175,26 +147,21 @@
                     uploadedImages.splice(globalIndex, 1);
                     renderSheets();
                 };
-
                 overlay.appendChild(removeBtn);
                 slot.appendChild(img);
                 slot.appendChild(overlay);
                 sheet.appendChild(slot);
             });
-
             preview.appendChild(title);
             preview.appendChild(sheet);
             return preview;
         }
-
         function createEmptySheet() {
             const preview = document.createElement('div');
             preview.className = 'sheet-preview flex flex-col items-center w-full';
-
             const title = document.createElement('div');
             title.className = 'sheet-title text-sm font-semibold text-slate-500 mb-2';
             title.textContent = 'A4 Sheet 1 • Empty';
-
             const sheet = document.createElement('div');
             sheet.className = 'a4-sheet bg-white shadow-[0_0_40px_rgba(0,0,0,0.1)] relative grid rounded-sm';
             sheet.style.cssText = `
@@ -208,44 +175,34 @@
                 align-content: center;
                 margin: 0 auto;
             `;
-
             const emptyState = document.createElement('div');
             emptyState.className = 'absolute inset-0 flex items-center justify-center text-slate-400 text-center pointer-events-none';
             emptyState.innerHTML = '<p class="text-xl font-semibold text-slate-400">Upload Photos</p>';
-
             sheet.appendChild(emptyState);
             preview.appendChild(title);
             preview.appendChild(sheet);
             return preview;
         }
-
         function renderSheets() {
             sheetsContainer.innerHTML = '';
-
             if (uploadedImages.length === 0) {
                 sheetsContainer.appendChild(createEmptySheet());
                 imageCounter.textContent = '0 cards • 0 A4 sheets';
                 return;
             }
-
             const sheetCount = Math.ceil(uploadedImages.length / CARDS_PER_SHEET);
-
             for (let i = 0; i < sheetCount; i++) {
                 const start = i * CARDS_PER_SHEET;
                 const sheetImages = uploadedImages.slice(start, start + CARDS_PER_SHEET);
                 sheetsContainer.appendChild(createSheet(sheetImages, i + 1));
             }
-
             imageCounter.textContent = `${uploadedImages.length} card(s) • ${sheetCount} A4 sheet(s)`;
         }
-
         imageUpload.addEventListener('change', (e) => {
             const files = e.target.files;
             if (!files) return;
-
             Array.from(files).forEach(file => {
                 if (!file.type.startsWith('image/')) return;
-
                 const reader = new FileReader();
                 reader.onload = (uploadEvent) => {
                     uploadedImages.push(uploadEvent.target.result);
@@ -253,47 +210,37 @@
                 };
                 reader.readAsDataURL(file);
             });
-
             imageUpload.value = '';
         });
-
         clearBtn.addEventListener('click', () => {
             uploadedImages = [];
             renderSheets();
         });
-
-        // Download each A4 sheet as a separate high-resolution PNG.
         downloadBtn.addEventListener('click', async () => {
             if (uploadedImages.length === 0) {
                 alert('Please add some images before downloading.');
                 return;
             }
-
             const sheets = Array.from(document.querySelectorAll('.a4-sheet'));
             const originalText = downloadBtn.textContent;
             downloadBtn.textContent = 'Generating A4 PNGs...';
             downloadBtn.disabled = true;
-
             try {
                 for (let i = 0; i < sheets.length; i++) {
                     const sheet = sheets[i];
                     const overlays = sheet.querySelectorAll('.group div');
                     overlays.forEach(o => o.style.display = 'none');
-
                     const canvas = await html2canvas(sheet, {
                         scale: 3,
                         useCORS: true,
                         allowTaint: true,
                         backgroundColor: '#ffffff'
                     });
-
                     overlays.forEach(o => o.style.display = '');
-
                     const link = document.createElement('a');
                     link.download = `A4_Portrait_Card_Collage_54x85mm_Sheet_${i + 1}.png`;
                     link.href = canvas.toDataURL('image/png', 1.0);
                     link.click();
-
                     await new Promise(resolve => setTimeout(resolve, 300));
                 }
             } catch (err) {
@@ -307,10 +254,7 @@
                 downloadBtn.disabled = false;
             }
         });
-
-        window.onload = () => {
-            renderSheets();
-        };
+        window.onload = () => { renderSheets(); };
     </script>
 </body>
 </html>
